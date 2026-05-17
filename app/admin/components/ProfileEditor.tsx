@@ -2,20 +2,14 @@
 import { useState, useEffect } from 'react';
 import { BaseResumeProfile } from '@/app/data/baseResumes';
 import { DEFAULT_PROMPT_TEMPLATE } from '@/app/utils/promptBuilder';
+import TemplateSelectorGrid from './TemplateSelectorGrid';
+import TemplatePreviewModal from './TemplatePreviewModal';
+import { PDF_TEMPLATES } from './templateMetadata';
 
 interface ProfileEditorProps {
   profiles: BaseResumeProfile[];
   onUpdate: () => void;
 }
-
-// PDF Template options
-const PDF_TEMPLATES = [
-  { value: 1, label: 'Template1' },
-  { value: 2, label: 'Template2' },
-  { value: 3, label: 'Template3' },
-  { value: 4, label: 'Template4' },
-  { value: 5, label: 'Template5' },
-];
 
 export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps) {
   const [selectedProfileName, setSelectedProfileName] = useState<string | null>(null);
@@ -25,6 +19,7 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
 
   useEffect(() => {
     if (profiles.length > 0 && !selectedProfileName) {
@@ -154,7 +149,8 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
     const currentPrompt = editingProfile.customPrompt || DEFAULT_PROMPT_TEMPLATE;
 
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <>
+        <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">
             {isCreating ? 'Create New Profile' : 'Edit Profile'}
@@ -278,26 +274,14 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
 
           {/* PDF Template Selection */}
           <div className="border-b border-gray-200 pb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">PDF Template</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select PDF Template
-              </label>
-              <select
-                value={editingProfile.pdfTemplate || 1}
-                onChange={(e) => setEditingProfile({ ...editingProfile, pdfTemplate: Number(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              >
-                {PDF_TEMPLATES.map((template) => (
-                  <option key={template.value} value={template.value}>
-                    {template.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs text-gray-500">
-                Choose the PDF template style for this profile
-              </p>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">PDF Template Style</h3>
+            <TemplateSelectorGrid
+              selectedTemplate={editingProfile.pdfTemplate || 1}
+              onSelect={(templateId) =>
+                setEditingProfile({ ...editingProfile, pdfTemplate: templateId })
+              }
+              onPreview={(templateId) => setPreviewTemplateId(templateId)}
+            />
           </div>
 
           {/* Custom Prompt Editor */}
@@ -369,8 +353,15 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
           </div>
         </div>
       </div>
-    );
-  }
+
+      {/* Template Preview Modal */}
+      <TemplatePreviewModal
+        templateId={previewTemplateId}
+        onClose={() => setPreviewTemplateId(null)}
+      />
+    </>
+  );
+}
 
   // Show profile list and selection
   return (
@@ -410,7 +401,13 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
                     {profile.customPrompt && (
                       <p className="text-blue-600">✓ Custom prompt configured</p>
                     )}
-                    <p>PDF Template: {PDF_TEMPLATES.find(t => t.value === (profile.pdfTemplate || 1))?.label || "Template1"}</p>
+                    <p>
+                      PDF Template:{' '}
+                      <span className="font-semibold">
+                        {PDF_TEMPLATES.find(t => t.value === (profile.pdfTemplate || 1))?.label ||
+                          'Template1'}
+                      </span>
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2">

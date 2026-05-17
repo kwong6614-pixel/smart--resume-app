@@ -1,0 +1,14 @@
+
+> resume-nextjs@0.1.0 dev
+> next dev --turbopack --hostname 127.0.0.1 --port 3000
+
+   ▲ Next.js 15.5.9 (Turbopack)
+   - Local:        http://127.0.0.1:3000
+   - Network:      http://127.0.0.1:3000
+
+ ✓ Starting...
+ ✓ Ready in 1330ms
+ ○ Compiling / ...
+[?25h
+
+C:\Dev\personal-resume-tailor>More? 
