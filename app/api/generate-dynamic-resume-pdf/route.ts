@@ -167,3 +167,10 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET() {
+  return NextResponse.json(
+    { message: 'This endpoint accepts POST requests only. Send form data to generate a PDF.' },
+    { status: 200 }
+  );
+}
