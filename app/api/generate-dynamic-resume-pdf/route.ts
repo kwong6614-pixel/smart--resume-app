@@ -53,6 +53,7 @@ async function generateResumePdf(resumeText: string, template: number = 1): Prom
     page,
     font,
     fontBold,
+    headline: parsed.headline,
     name: parsed.name,
     email: parsed.email,
     phone: parsed.phone,

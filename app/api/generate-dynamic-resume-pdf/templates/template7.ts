@@ -1,206 +1,371 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, SPACING, BULLET_INDENT, BULLET_CHAR, SKILL_CONTINUATION_INDENT, parseEducationLine, isEducationSection, splitIntoBulletLines } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
 
-// TEMPLATE 7: MODERN SOFTWARE ENGINEER - Optimized for engineers with strong readability and elegant spacing
-export async function renderTemplate7(context: TemplateContext): Promise<Uint8Array> {
-  const { pdfDoc, font, fontBold, name, email, phone, location, linkedin, body, PAGE_WIDTH, PAGE_HEIGHT } = context;
-  let { page } = context;
-  
+// Template 7 Body Content Renderer - Minimalist with geometric shapes
+function renderBodyContentTemplate7(
+  context: TemplateContext,
+  y: number,
+  left: number,
+  right: number,
+  contentWidth: number,
+  bodySize: number,
+  bodyLineHeight: number,
+  sectionHeaderSize: number,
+  sectionLineHeight: number,
+  marginBottom: number
+): number {
+  const { font, fontBold, body, PAGE_HEIGHT, PAGE_WIDTH, pdfDoc } = context;
   const BLACK = COLORS.BLACK;
-  const CHARCOAL = rgb(0.15, 0.15, 0.15);
-  const MEDIUM_GRAY = rgb(0.45, 0.45, 0.45);
-  const LIGHT_ACCENT = rgb(0.92, 0.92, 0.92);
+  const MEDIUM_GRAY = COLORS.MEDIUM_GRAY;
+  const ORANGE = rgb(0.9, 0.5, 0.2);
   
-  // Layout - Balanced for content density
-  const MARGIN_LEFT = 55;
-  const MARGIN_RIGHT = 55;
-  const MARGIN_TOP = 52;
-  const MARGIN_BOTTOM = 48;
-  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
-  
-  // Typography - Modern and engineered for readability
-  const NAME_SIZE = 28;
-  const CONTACT_SIZE = 8.5;
-  const SECTION_SIZE = 11;
-  const JOB_TITLE_SIZE = 10.5;
-  const BODY_SIZE = 9.5;
-  const LINE_HEIGHT = BODY_SIZE * SPACING.BULLET_LINE_HEIGHT;
-  
-  let y = PAGE_HEIGHT - MARGIN_TOP;
-  
-  // === HEADER ===
-  if (name) {
-    page.drawText(name, { x: MARGIN_LEFT, y, size: NAME_SIZE, font: fontBold, color: CHARCOAL });
-    y -= NAME_SIZE + 8;
-  }
-  
-  const contactParts = [location, phone, email, linkedin].filter(Boolean);
-  if (contactParts.length > 0) {
-    page.drawText(contactParts.join('   •   '), { x: MARGIN_LEFT, y, size: CONTACT_SIZE, font, color: MEDIUM_GRAY });
-    y -= CONTACT_SIZE + 14;
-  }
-  
-  // === BODY ===
   const bodyLines = body.split('\n');
-  let isFirstJob = true;
-  let isFirstBulletAfterJob = false;
+  let firstJob = true;
   let currentSection = '';
-  let isFirstEducation = true;
-
-  const spaceWidthForSkills = font.widthOfTextAtSize(' ', BODY_SIZE);
-
-  const wrapSkillsLine = (text: string, maxWidth: number): string[] => {
-    const skillMatch = text.match(/^[\-\·•]\s*(\*\*[^*]+\*\*:?|[^:]+:)\s*(.*)$/);
-    if (!skillMatch) return wrapText(text, font, BODY_SIZE, maxWidth);
-    const category = skillMatch[1];
-    const content = skillMatch[2];
-    const categoryDisplayText = category.replace(/\*\*/g, '');
-    const bulletWidth = font.widthOfTextAtSize(BULLET_CHAR + '   ', BODY_SIZE);
-    const categoryWidth = fontBold.widthOfTextAtSize(categoryDisplayText + ' ', BODY_SIZE);
-    const wrappedContent = wrapText(content, font, BODY_SIZE, maxWidth - categoryWidth - bulletWidth);
-    const lines: string[] = [];
-    const continuationSpaces = ' '.repeat(Math.max(0, Math.ceil(SKILL_CONTINUATION_INDENT / spaceWidthForSkills)));
-    for (let i = 0; i < wrappedContent.length; i++) {
-      if (i === 0) lines.push(BULLET_CHAR + '   ' + category + ' ' + wrappedContent[i]);
-      else lines.push(continuationSpaces + wrappedContent[i]);
-    }
-    return lines;
-  };
-
+  
   for (let i = 0; i < bodyLines.length; i++) {
     const line = bodyLines[i].trim();
-    
     if (!line) {
-      y -= 3;
+      y -= 6;
       continue;
     }
     
-    // Section header
-    if (line.endsWith(':')) {
-      y -= SPACING.SECTION_GAP;
-      
-      if (y < MARGIN_BOTTOM + 50) {
-        page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-        context.page = page;
-        y = PAGE_HEIGHT - MARGIN_TOP;
-      }
-      
-      currentSection = line.slice(0, -1).toLowerCase();
-      const sectionName = line.slice(0, -1);
-      
-      // Background bar for section header - subtle accent
-      page.drawRectangle({
-        x: MARGIN_LEFT - 5,
-        y: y - 3,
-        width: CONTENT_WIDTH + 10,
-        height: SECTION_SIZE + 10,
-        color: LIGHT_ACCENT,
-        borderColor: LIGHT_ACCENT
-      });
-      
-      page.drawText(sectionName, { x: MARGIN_LEFT, y, size: SECTION_SIZE, font: fontBold, color: CHARCOAL });
-      y -= SPACING.AFTER_SECTION_HEADER + 2;
-      isFirstJob = true;
-      isFirstBulletAfterJob = false;
-      isFirstEducation = true;
-      continue;
-    }
+    // Check if this is a section header (ends with colon or is a known section name)
+    const isSectionHeader = line.endsWith(':') || 
+                           /^(summary|education|experience|technical skills|skills|professional experience)$/i.test(line.trim());
     
-    // Education entry
-    if (isEducationSection(currentSection)) {
-      const eduParsed = parseEducationLine(line);
-      if (eduParsed) {
-        if (!isFirstEducation) y -= SPACING.EDUCATION_GAP;
-        isFirstEducation = false;
-        
-        if (y < MARGIN_BOTTOM + 40) {
-          page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-          context.page = page;
-          y = PAGE_HEIGHT - MARGIN_TOP;
+    if (isSectionHeader) {
+      y -= 15;
+      const sectionHeader = line.endsWith(':') ? line.slice(0, -1).trim() : line.trim();
+      currentSection = sectionHeader.toLowerCase();
+      const sectionLines = wrapText(sectionHeader, fontBold, sectionHeaderSize, contentWidth - 60);
+      
+      for (const sectionLine of sectionLines) {
+        if (y < marginBottom) {
+          context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+          y = PAGE_HEIGHT - 72;
         }
         
-        page.drawText(eduParsed.degree, { x: MARGIN_LEFT, y, size: JOB_TITLE_SIZE, font: fontBold, color: CHARCOAL });
-        y -= JOB_TITLE_SIZE + 2;
+        // Geometric shape (circle) before section header
+        const circleRadius = 4;
+        context.page.drawCircle({
+          x: left - 15,
+          y: y + sectionHeaderSize / 2,
+          size: circleRadius,
+          color: ORANGE,
+        });
         
-        page.drawText(`${eduParsed.institution}  •  ${eduParsed.year}`, { x: MARGIN_LEFT, y, size: BODY_SIZE, font, color: MEDIUM_GRAY });
-        y -= BODY_SIZE + 5;
-        continue;
-      }
-    }
-    
-    // Job line
-    const jobMatch = line.match(/^(.+?) at (.+?):\s*(.+)$/);
-    if (jobMatch) {
-      const [, jobTitle, company, period] = jobMatch;
-      
-      if (!isFirstJob) y -= SPACING.JOB_GAP;
-      isFirstJob = false;
-      
-      if (y < MARGIN_BOTTOM + 60) {
-        page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-        context.page = page;
-        y = PAGE_HEIGHT - MARGIN_TOP;
-      }
-      
-      page.drawText(jobTitle.trim(), { x: MARGIN_LEFT, y, size: JOB_TITLE_SIZE, font: fontBold, color: CHARCOAL });
-      y -= JOB_TITLE_SIZE + 2;
-      
-      const periodFormatted = formatDate(period.trim());
-      page.drawText(`${company.trim()}  •  ${periodFormatted}`, { x: MARGIN_LEFT, y, size: BODY_SIZE, font, color: MEDIUM_GRAY });
-      y -= SPACING.AFTER_JOB_HEADER;
-      isFirstBulletAfterJob = true;
-      continue;
-    }
-
-    const isSkillsSection = currentSection.includes('skill') || currentSection.includes('technologies');
-    const isSkillLine = line.match(/^[\-\·•]\s*(\*\*[^*]+\*\*:?|[A-Za-z &\/]+:)\s*.+$/);
-    if (isSkillsSection && isSkillLine) {
-      const wrappedLines = wrapSkillsLine(line, CONTENT_WIDTH - BULLET_INDENT);
-      for (let j = 0; j < wrappedLines.length; j++) {
-        if (y < MARGIN_BOTTOM) {
-          page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-          context.page = page;
-          y = PAGE_HEIGHT - MARGIN_TOP;
-        }
-        const xPos = MARGIN_LEFT + BULLET_INDENT;
-        drawTextWithBold(page, wrappedLines[j], xPos, y, font, fontBold, BODY_SIZE, BLACK);
-        y -= LINE_HEIGHT;
-      }
-      y -= SPACING.BULLET_GAP;
-      continue;
-    }
-    
-    // Bullet or regular text
-    const isExperienceSection = currentSection.includes('experience') || currentSection.includes('professional');
-    let linesToRender = [line];
-    if (isExperienceSection && !/^[\-\·•]\s/.test(line)) {
-      const bulletLines = splitIntoBulletLines(line);
-      if (bulletLines.length > 1) linesToRender = bulletLines;
-    }
-    
-    for (const singleLine of linesToRender) {
-      const wrapped = wrapBulletText(singleLine, font, BODY_SIZE, CONTENT_WIDTH - BULLET_INDENT);
-      
-      if (wrapped.hasBullet && isFirstBulletAfterJob) {
-        y -= SPACING.BEFORE_FIRST_BULLET;
-        isFirstBulletAfterJob = false;
-      }
-      
-      for (const wline of wrapped.lines) {
-        if (y < MARGIN_BOTTOM) {
-          page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-          context.page = page;
-          y = PAGE_HEIGHT - MARGIN_TOP;
-        }
+        context.page.drawText(sectionLine, { 
+          x: left, 
+          y, 
+          size: sectionHeaderSize, 
+          font: fontBold, 
+          color: BLACK 
+        });
         
-        const xPos = wrapped.hasBullet ? MARGIN_LEFT + BULLET_INDENT : MARGIN_LEFT;
-        drawTextWithBold(page, wline, xPos, y, font, fontBold, BODY_SIZE, BLACK);
-        y -= LINE_HEIGHT;
+        // Minimal line after text
+        const textWidth = fontBold.widthOfTextAtSize(sectionLine, sectionHeaderSize);
+        context.page.drawLine({
+          start: { x: left + textWidth + 10, y: y + sectionHeaderSize / 2 },
+          end: { x: right, y: y + sectionHeaderSize / 2 },
+          thickness: 0.5,
+          color: rgb(0.8, 0.8, 0.8),
+        });
+        
+        y -= sectionLineHeight + 8;
       }
+    } else {
+      const isJobExperience = / at .+:.+/.test(line);
       
-      if (wrapped.hasBullet) y -= SPACING.BULLET_GAP;
+      if (isJobExperience) {
+        // Match format: "JobTitle at CompanyName, CompanyLocation : Period"
+        const match = line.match(/^(.+?) at (.+?):\s*(.+)$/);
+        if (match) {
+          const [, jobTitle, companyPart, period] = match;
+          
+          // Split company part by last comma to separate company name and location
+          let companyName = companyPart.trim();
+          let companyLocation = '';
+          const lastCommaIndex = companyPart.indexOf(',');
+          if (lastCommaIndex !== -1) {
+            companyName = companyPart.substring(0, lastCommaIndex).trim();
+            companyLocation = companyPart.substring(lastCommaIndex + 1).trim();
+          }
+          
+          if (!firstJob) {
+            y -= 16;
+          }
+          firstJob = false;
+          
+          const titleLines = wrapText(jobTitle.trim(), fontBold, bodySize + 2, contentWidth - 20);
+          for (const titleLine of titleLines) {
+            if (y < marginBottom) {
+              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+              y = PAGE_HEIGHT - 72;
+            }
+            drawTextWithBold(context.page, titleLine, left + 20, y, font, fontBold, bodySize + 2, BLACK);
+            y -= bodyLineHeight + 2;
+          }
+          
+          const formattedPeriod = formatDate(period.trim());
+          // Display: "CompanyName, CompanyLocation  •  Period" (or just "CompanyName  •  Period" if no location)
+          const companyInfo = companyLocation ? `${companyName}  •  ${companyLocation}` : companyName;
+          const companyPeriodLine = `${companyInfo}  •  ${formattedPeriod}`;
+          const companyPeriodLines = wrapText(companyPeriodLine, font, bodySize, contentWidth - 20);
+          for (const line of companyPeriodLines) {
+            if (y < marginBottom) {
+              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+              y = PAGE_HEIGHT - 72;
+            }
+            drawTextWithBold(context.page, line, left + 20, y, font, fontBold, bodySize, MEDIUM_GRAY);
+            y -= bodyLineHeight;
+          }
+          
+          y -= 10;
+        }
+      } else {
+        // Check if we're in Summary or Education section first
+        const isSummaryOrEducation = currentSection === 'summary' || currentSection === 'education';
+        
+        if (isSummaryOrEducation) {
+          // For Summary and Education, strip any existing bullets and use regular text wrapping
+          const lineWithoutBullet = line.replace(/^[\-\·•]\s*/, '').trim();
+          const wrapped = wrapText(lineWithoutBullet, font, bodySize, contentWidth - 20);
+          
+          for (const lineText of wrapped) {
+            if (y < marginBottom) {
+              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+              y = PAGE_HEIGHT - 72;
+            }
+            
+            drawTextWithBold(context.page, lineText, left + 20, y, font, fontBold, bodySize, BLACK);
+            y -= bodyLineHeight;
+          }
+        } else {
+          const lineWithoutBullet = line.trim().replace(/^[·•]\s*/, '');
+          const colonIndex = lineWithoutBullet.indexOf(':');
+          // Check if we're in Technical Skills section
+          const isTechnicalSkillsSection = currentSection === 'technical skills' || currentSection === 'skills';
+          // A line is a skills category if:
+          // 1. It starts with a bullet AND has a colon (original check)
+          // 2. OR we're in Technical Skills section AND the line has a colon (new check)
+          const isSkillsCategory = ((line.startsWith('·') || line.startsWith('•')) && 
+                                   colonIndex !== -1 && 
+                                   colonIndex < 30 && 
+                                   !lineWithoutBullet.substring(0, colonIndex).includes(' at ')) ||
+                                  (isTechnicalSkillsSection && colonIndex !== -1 && colonIndex < 50);
+        
+          if (isSkillsCategory) {
+          const bulletSymbol = BULLET_CHAR;
+          const bulletSize = bodySize * 1.2;
+          const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bulletSize);
+          
+          const colonIndex = lineWithoutBullet.indexOf(':');
+          if (colonIndex !== -1) {
+            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).trim();
+            const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
+            
+            const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
+            const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
+            const wrappedSkills = wrapText(skillsText, font, bodySize, contentWidth - 20);
+            
+            let currentX = left + 20;
+            
+            if (y < marginBottom) {
+              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+              y = PAGE_HEIGHT - 72;
+            }
+            
+            context.page.drawText(bulletSymbol, { 
+              x: currentX, 
+              y, 
+              size: bulletSize, 
+              font, 
+              color: BLACK 
+            });
+            
+            currentX += bulletWidth;
+            context.page.drawText(categoryName, { 
+              x: currentX, 
+              y, 
+              size: bodySize, 
+              font: fontBold, 
+              color: BLACK 
+            });
+            
+            if (wrappedSkills.length > 0 && wrappedSkills[0]) {
+              currentX += categoryWidth + spaceWidth;
+              context.page.drawText(wrappedSkills[0], {
+                x: currentX,
+                y,
+                size: bodySize,
+                font,
+                color: BLACK
+              });
+              
+              for (let i = 1; i < wrappedSkills.length; i++) {
+                y -= bodyLineHeight;
+                if (y < marginBottom) {
+                  context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                  y = PAGE_HEIGHT - 72;
+                }
+                context.page.drawText(wrappedSkills[i], {
+                  x: left + 20 + bulletWidth,
+                  y,
+                  size: bodySize,
+                  font,
+                  color: BLACK
+                });
+              }
+            }
+            y -= bodyLineHeight + 2;
+          }
+          } else {
+            // For experience bullets and other content, add bullets if needed
+            const hasBullet = /^[\-\·•]\s/.test(line);
+          const bulletSymbol = BULLET_CHAR;
+          const bulletSize = bodySize * 1.2;
+          const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bulletSize);
+          
+          let textToWrap = line;
+          if (!hasBullet) {
+            textToWrap = bulletSymbol + '   ' + line;
+          }
+          
+          const wrapped = wrapBulletText(textToWrap, font, bodySize, contentWidth - 20);
+          
+          // Calculate the content start position (after bullet) to align all wrapped lines
+          let contentStartX = left + 20 + bulletWidth;
+          
+          for (let i = 0; i < wrapped.lines.length; i++) {
+            if (y < marginBottom) {
+              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+              y = PAGE_HEIGHT - 72;
+            }
+            
+            const lineText = wrapped.lines[i];
+            
+            if (i === 0 && (lineText.startsWith('•') || lineText.startsWith('·') || lineText.startsWith('-'))) {
+              const bulletMatch = lineText.match(/^([\-\·•])\s*(.*)/);
+              if (bulletMatch) {
+                const [, bulletChar, content] = bulletMatch;
+                const bulletX = left + 20;
+                context.page.drawText(bulletChar, {
+                  x: bulletX,
+                  y,
+                  size: bulletSize,
+                  font,
+                  color: BLACK
+                });
+                contentStartX = bulletX + font.widthOfTextAtSize(bulletChar + '   ', bodySize);
+                drawTextWithBold(context.page, content, contentStartX, y, font, fontBold, bodySize, BLACK);
+              } else {
+                drawTextWithBold(context.page, lineText, left + 20, y, font, fontBold, bodySize, BLACK);
+              }
+            } else {
+              // For wrapped lines, align to the content start position (after bullet)
+              drawTextWithBold(context.page, lineText, contentStartX, y, font, fontBold, bodySize, BLACK);
+            }
+            
+            y -= bodyLineHeight;
+          }
+          }
+        }
+      }
+    }
+    
+    if (y < marginBottom) {
+      context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+      y = PAGE_HEIGHT - 72;
     }
   }
+  
+  return y;
+}
+
+// MINIMALIST GEOMETRIC TEMPLATE - Clean design with geometric shapes and minimal elements
+export async function renderTemplate7(context: TemplateContext): Promise<Uint8Array> {
+  const { pdfDoc, page, font, fontBold, headline, name, email, phone, location, PAGE_WIDTH, PAGE_HEIGHT } = context;
+  const BLACK = COLORS.BLACK;
+  const MEDIUM_GRAY = COLORS.MEDIUM_GRAY;
+  const ORANGE = rgb(0.9, 0.5, 0.2);
+  
+  const MARGIN_TOP = 70;
+  const MARGIN_BOTTOM = 50;
+  const MARGIN_LEFT = 40;
+  const MARGIN_RIGHT = 40;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
+  
+  const NAME_SIZE = 28;
+  const CONTACT_SIZE = 9;
+  const SECTION_HEADER_SIZE = 13;
+  const BODY_SIZE = 9.5;
+  
+  let y = PAGE_HEIGHT - MARGIN_TOP;
+  const left = MARGIN_LEFT;
+  const right = PAGE_WIDTH - MARGIN_RIGHT;
+  
+  // Geometric shape decoration (top right)
+  page.drawCircle({
+    x: PAGE_WIDTH - 40,
+    y: PAGE_HEIGHT - 40,
+    size: 25,
+    color: rgb(0.98, 0.95, 0.92),
+  });
+  page.drawCircle({
+    x: PAGE_WIDTH - 30,
+    y: PAGE_HEIGHT - 50,
+    size: 15,
+    color: ORANGE,
+  });
+  
+  // Name (left-aligned, minimal)
+  if (name) {
+    const nameLines = wrapText(name, fontBold, NAME_SIZE, CONTENT_WIDTH);
+    for (const line of nameLines) {
+      page.drawText(line, { 
+        x: left, 
+        y, 
+        size: NAME_SIZE, 
+        font: fontBold, 
+        color: BLACK 
+      });
+      y -= NAME_SIZE * 0.9;
+    }
+    y -= 8;
+  }
+  
+  // Contact info (minimal, left-aligned)
+  const contactParts = [location, phone, email].filter(Boolean);
+  if (contactParts.length > 0) {
+    const contactLine = contactParts.join('  •  ');
+    const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
+    for (const line of contactLines) {
+      page.drawText(line, { 
+        x: left, 
+        y, 
+        size: CONTACT_SIZE, 
+        font, 
+        color: MEDIUM_GRAY 
+      });
+      y -= CONTACT_SIZE * 1.3;
+    }
+  }
+  
+  
+  // Render body content
+  y = renderBodyContentTemplate7(
+    context, 
+    y, 
+    left, 
+    right, 
+    CONTENT_WIDTH, 
+    BODY_SIZE, 
+    BODY_SIZE * 1.5, 
+    SECTION_HEADER_SIZE, 
+    SECTION_HEADER_SIZE * 1.4, 
+    MARGIN_BOTTOM
+  );
   
   return await pdfDoc.save();
 }
