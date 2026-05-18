@@ -376,7 +376,7 @@ export function addLinkAnnotation(
       Subtype: 'Link',
       Rect: [x, y, x + width, y + height],
       Border: [0, 0, 0],
-      A: pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: url }),
+      A: pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: url, NewWindow: true }),
     });
 
     const linkRef = pdfDoc.context.register(linkDict);
@@ -424,6 +424,27 @@ export function drawCenteredTextWithOptionalLink(
     const beforeWidth = font.widthOfTextAtSize(before, size);
     const labelWidth = font.widthOfTextAtSize(linkLabel, size);
 
+    // Draw the pin icon immediately to the left of the linked label.
+    const iconSize = Math.max(4, size * 0.5);
+    const iconPadding = 3;
+    const iconX = x + beforeWidth - iconSize - iconPadding;
+    const iconCenterY = y + size * 0.35;
+    if (iconX > x) {
+      page.drawCircle({
+        x: iconX + iconSize / 2,
+        y: iconCenterY,
+        size: iconSize / 2,
+        color,
+      });
+      page.drawRectangle({
+        x: iconX + iconSize * 0.38,
+        y: iconCenterY - iconSize * 0.65,
+        width: iconSize * 0.24,
+        height: iconSize * 0.7,
+        color,
+      });
+    }
+
     // Add a small vertical padding so the clickable area is slightly larger than the glyphs
     const paddingY = 2;
     addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
@@ -452,6 +473,26 @@ export function drawRightTextWithOptionalLink(
     const before = text.split(linkLabel)[0];
     const beforeWidth = font.widthOfTextAtSize(before, size);
     const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+
+    const iconSize = Math.max(4, size * 0.5);
+    const iconPadding = 3;
+    const iconX = x + beforeWidth - iconSize - iconPadding;
+    const iconCenterY = y + size * 0.35;
+    if (iconX > x) {
+      page.drawCircle({
+        x: iconX + iconSize / 2,
+        y: iconCenterY,
+        size: iconSize / 2,
+        color,
+      });
+      page.drawRectangle({
+        x: iconX + iconSize * 0.38,
+        y: iconCenterY - iconSize * 0.65,
+        width: iconSize * 0.24,
+        height: iconSize * 0.7,
+        color,
+      });
+    }
     const paddingY = 2;
     addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
   }
@@ -477,6 +518,26 @@ export function drawLeftTextWithOptionalLink(
     const before = text.split(linkLabel)[0];
     const beforeWidth = font.widthOfTextAtSize(before, size);
     const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+
+    const iconSize = Math.max(4, size * 0.5);
+    const iconPadding = 3;
+    const iconX = x + beforeWidth - iconSize - iconPadding;
+    const iconCenterY = y + size * 0.35;
+    if (iconX > x) {
+      page.drawCircle({
+        x: iconX + iconSize / 2,
+        y: iconCenterY,
+        size: iconSize / 2,
+        color,
+      });
+      page.drawRectangle({
+        x: iconX + iconSize * 0.38,
+        y: iconCenterY - iconSize * 0.65,
+        width: iconSize * 0.24,
+        height: iconSize * 0.7,
+        color,
+      });
+    }
     const paddingY = 2;
     addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
   }
