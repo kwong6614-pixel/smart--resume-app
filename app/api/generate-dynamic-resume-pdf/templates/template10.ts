@@ -159,7 +159,7 @@ function renderBodyContentTemplate9(
               y = PAGE_HEIGHT - 100;
             }
             
-            context.page.drawText(bulletSymbol, { 
+            context.page.drawText(bulletSymbol, {
               x: currentX, 
               y, 
               size: bodySize, 
@@ -168,7 +168,7 @@ function renderBodyContentTemplate9(
             });
             
             currentX += bulletWidth;
-            context.page.drawText(categoryName, { 
+            context.page.drawText(categoryName, {
               x: currentX, 
               y, 
               size: bodySize, 
@@ -177,9 +177,9 @@ function renderBodyContentTemplate9(
             });
             
             if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              currentX += categoryWidth + spaceWidth;
+              const contentStartX = currentX + categoryWidth + spaceWidth;
               context.page.drawText(wrappedSkills[0], {
-                x: currentX,
+                x: contentStartX,
                 y,
                 size: bodySize,
                 font,
@@ -193,7 +193,7 @@ function renderBodyContentTemplate9(
                   y = PAGE_HEIGHT - 100;
                 }
                 context.page.drawText(wrappedSkills[i], {
-                  x: left + 15 + bulletWidth + categoryWidth + spaceWidth,
+                  x: contentStartX,
                   y,
                   size: bodySize,
                   font,
