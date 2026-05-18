@@ -1,5 +1,5 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR, drawCenteredTextWithOptionalLink } from '../utils';
 
 // Template 8 Body Content Renderer - Classic bordered frame
 function renderBodyContentTemplate8(
@@ -424,20 +424,13 @@ export async function renderTemplate8(context: TemplateContext): Promise<Uint8Ar
   }
   
   // Contact info (centered, classic)
-  const contactParts = [location, phone, email].filter(Boolean);
+  const contactParts = [location, email, phone].filter(Boolean);
+  if (context.linkedin) contactParts.push('LinkedIn');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
     for (const line of contactLines) {
-      const textWidth = font.widthOfTextAtSize(line, CONTACT_SIZE);
-      const centerX = (PAGE_WIDTH - textWidth) / 2;
-      page.drawText(line, { 
-        x: centerX, 
-        y, 
-        size: CONTACT_SIZE, 
-        font, 
-        color: MEDIUM_GRAY 
-      });
+      drawCenteredTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, y);
       y -= CONTACT_SIZE * 1.3;
     }
     y -= 13;

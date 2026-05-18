@@ -1,5 +1,5 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR, drawRightTextWithOptionalLink } from '../utils';
 
 // Template 9 Body Content Renderer - Modern design with balanced layout
 function renderBodyContentTemplate9(
@@ -349,18 +349,11 @@ export async function renderTemplate10(context: TemplateContext): Promise<Uint8A
   
   // Contact info in header bar (light gray text, right-aligned, vertically stacked)
   const contactParts = [location, phone, email].filter(Boolean);
+  if (context.linkedin) contactParts.push('LinkedIn');
   if (contactParts.length > 0) {
     let contactY = PAGE_HEIGHT - 40;
     for (const contactPart of contactParts) {
-      const textWidth = font.widthOfTextAtSize(contactPart, CONTACT_SIZE);
-      const rightX = right - textWidth;
-      page.drawText(contactPart, { 
-        x: rightX, 
-        y: contactY, 
-        size: CONTACT_SIZE, 
-        font, 
-        color: rgb(0.92, 0.92, 0.92) // Light gray
-      });
+      drawRightTextWithOptionalLink(page, pdfDoc, contactPart, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, rgb(0.92, 0.92, 0.92), right, contactY);
       contactY -= CONTACT_SIZE * 1.6; // Stack vertically with spacing
     }
   }

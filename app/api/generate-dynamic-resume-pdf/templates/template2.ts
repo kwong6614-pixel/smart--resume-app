@@ -1,5 +1,5 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR, drawRightTextWithOptionalLink } from '../utils';
 
 // Template 2 Body Content Renderer - Structured style with top/bottom borders
 function renderBodyContentTemplate2(
@@ -582,20 +582,13 @@ export async function renderTemplate2(context: TemplateContext): Promise<Uint8Ar
   }
   
   // Contact info positioned on the left side (asymmetric)
-  const contactParts = [location, phone, email].filter(Boolean);
+  const contactParts = [location, email, phone].filter(Boolean);
+  if (context.linkedin) contactParts.push('LinkedIn');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH * 0.6);
     for (const line of contactLines) {
-      const textWidth = font.widthOfTextAtSize(line, CONTACT_SIZE);
-      const actualX = right - textWidth;
-      page.drawText(line, { 
-        x: actualX, 
-        y, 
-        size: CONTACT_SIZE, 
-        font, 
-        color: MEDIUM_GRAY 
-      });
+      drawRightTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, right, y);
       y -= CONTACT_SIZE * 1.3;
     }
     y -= 10;

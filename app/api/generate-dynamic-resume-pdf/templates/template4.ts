@@ -1,5 +1,5 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR, drawCenteredTextWithOptionalLink } from '../utils';
 
 // Template 7 Body Content Renderer - Refined style with corner accents
 function renderBodyContentTemplate4(
@@ -475,20 +475,13 @@ export async function renderTemplate4(context: TemplateContext): Promise<Uint8Ar
   }
   
   // Contact info (centered, elegant spacing)
-  const contactParts = [location, phone, email].filter(Boolean);
+  const contactParts = [location, email, phone].filter(Boolean);
+  if (context.linkedin) contactParts.push('LinkedIn');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
     for (const line of contactLines) {
-      const textWidth = font.widthOfTextAtSize(line, CONTACT_SIZE);
-      const centerX = (PAGE_WIDTH - textWidth) / 2;
-      page.drawText(line, { 
-        x: centerX, 
-        y, 
-        size: CONTACT_SIZE, 
-        font, 
-        color: MEDIUM_GRAY 
-      });
+      drawCenteredTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, y);
       y -= CONTACT_SIZE * 1.4;
     }
     y -= 10;

@@ -1,5 +1,5 @@
 import { PDFPage, rgb } from 'pdf-lib';
-import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR } from '../utils';
+import { TemplateContext, wrapText, wrapBulletText, formatDate, drawTextWithBold, COLORS, BULLET_CHAR, drawLeftTextWithOptionalLink } from '../utils';
 
 // Template 5 Body Content Renderer - Right-aligned header design
 function renderBodyContentTemplate5(
@@ -331,21 +331,14 @@ export async function renderTemplate5(context: TemplateContext): Promise<Uint8Ar
     }
   }
   
-  // Contact info (right-aligned, below name)
-  const contactParts = [location, phone, email].filter(Boolean);
+  // Contact info (right-aligned, below name) — preserve original alignment/positioning
+  const contactParts = [location, email, phone].filter(Boolean);
+  if (context.linkedin) contactParts.push('LinkedIn');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  |  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH * 0.7);
     for (const line of contactLines) {
-      const textWidth = font.widthOfTextAtSize(line, CONTACT_SIZE);
-      const rightX = right - textWidth;
-      page.drawText(line, { 
-        x: MARGIN_LEFT, 
-        y, 
-        size: CONTACT_SIZE, 
-        font, 
-        color: MEDIUM_GRAY 
-      });
+      drawLeftTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, MARGIN_LEFT, y);
       y -= CONTACT_SIZE * 1.4;
     }
     y -= 12;

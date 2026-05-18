@@ -1,4 +1,4 @@
-import { PDFDocument, PDFFont, PDFPage, RGB, rgb } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage, RGB, rgb, PDFName } from 'pdf-lib';
 
 // Shared interface for template rendering
 export interface TemplateContext {
@@ -11,7 +11,7 @@ export interface TemplateContext {
   email: string;
   phone: string;
   location: string;
-  linkedin: string;
+  linkedin?: string;
   body: string;
   PAGE_WIDTH: number;
   PAGE_HEIGHT: number;
@@ -358,3 +358,126 @@ export const COLORS = {
   LIGHT_GRAY: rgb(0.6, 0.6, 0.6),
   DARK_GRAY: rgb(0.25, 0.25, 0.25),
 };
+
+// Low-level helper to add a URI link annotation to a page
+export function addLinkAnnotation(
+  page: PDFPage,
+  pdfDoc: PDFDocument,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  url: string
+) {
+  try {
+    // Create the annotation dictionary
+    const linkDict = pdfDoc.context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      Rect: [x, y, x + width, y + height],
+      Border: [0, 0, 0],
+      A: pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: url }),
+    });
+
+    const linkRef = pdfDoc.context.register(linkDict);
+
+    const annotsKey = PDFName.of('Annots');
+    const existingAnnots = page.node.get(annotsKey);
+    if (existingAnnots) {
+      // Append to existing Annots array
+      const arr: any = existingAnnots as any;
+      arr.push(linkRef);
+      page.node.set(annotsKey, arr);
+    } else {
+      // Create new Annots array
+      page.node.set(annotsKey, pdfDoc.context.obj([linkRef]));
+    }
+  } catch (e) {
+    // Best-effort: avoid breaking rendering if annotation fails
+    // eslint-disable-next-line no-console
+    console.warn('Failed to add link annotation', e);
+  }
+}
+
+// Draw a centered line of text and optionally add a clickable link for a labeled segment
+export function drawCenteredTextWithOptionalLink(
+  page: PDFPage,
+  pdfDoc: PDFDocument,
+  text: string,
+  linkLabel: string | undefined,
+  linkUrl: string | undefined,
+  font: PDFFont,
+  size: number,
+  color: RGB,
+  pageWidth: number,
+  y: number
+) {
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const x = (pageWidth - textWidth) / 2;
+
+  // Draw the full line
+  page.drawText(text, { x, y, size, font, color });
+
+  // If a link is requested and the line contains the label, create an annotation
+  if (linkUrl && linkLabel && text.includes(linkLabel)) {
+    const before = text.split(linkLabel)[0];
+    const beforeWidth = font.widthOfTextAtSize(before, size);
+    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+
+    // Add a small vertical padding so the clickable area is slightly larger than the glyphs
+    const paddingY = 2;
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+  }
+}
+
+// Draw a right-aligned line of text and optionally add a clickable link for a labeled segment
+export function drawRightTextWithOptionalLink(
+  page: PDFPage,
+  pdfDoc: PDFDocument,
+  text: string,
+  linkLabel: string | undefined,
+  linkUrl: string | undefined,
+  font: PDFFont,
+  size: number,
+  color: RGB,
+  rightEdge: number,
+  y: number
+) {
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const x = rightEdge - textWidth;
+
+  page.drawText(text, { x, y, size, font, color });
+
+  if (linkUrl && linkLabel && text.includes(linkLabel)) {
+    const before = text.split(linkLabel)[0];
+    const beforeWidth = font.widthOfTextAtSize(before, size);
+    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+    const paddingY = 2;
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+  }
+}
+
+// Draw a left-aligned line of text and optionally add a clickable link for a labeled segment
+export function drawLeftTextWithOptionalLink(
+  page: PDFPage,
+  pdfDoc: PDFDocument,
+  text: string,
+  linkLabel: string | undefined,
+  linkUrl: string | undefined,
+  font: PDFFont,
+  size: number,
+  color: RGB,
+  leftEdge: number,
+  y: number
+) {
+  const x = leftEdge;
+  page.drawText(text, { x, y, size, font, color });
+
+  if (linkUrl && linkLabel && text.includes(linkLabel)) {
+    const before = text.split(linkLabel)[0];
+    const beforeWidth = font.widthOfTextAtSize(before, size);
+    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+    const paddingY = 2;
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+  }
+}
