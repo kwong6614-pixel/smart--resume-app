@@ -244,18 +244,17 @@ export function wrapBulletText(
   // Remove the original bullet/dash if present
   const content = hasBullet ? text.slice(bulletMatch![0].length) : text;
   
-  // For bullet lines, wrap content (accounting for bullet indent)
-  const effectiveWidth = hasBullet ? maxWidth - BULLET_INDENT : maxWidth;
+  // For bullet lines, wrap content using the actual bullet width
+  const bulletWidth = hasBullet ? font.widthOfTextAtSize(BULLET_CHAR + '   ', size) : 0;
+  const effectiveWidth = hasBullet ? maxWidth - bulletWidth : maxWidth;
   const wrappedLines = wrapText(content, font, size, effectiveWidth);
   
   const lines: string[] = [];
   for (let i = 0; i < wrappedLines.length; i++) {
     if (i === 0 && hasBullet) {
       lines.push(BULLET_CHAR + '   ' + wrappedLines[i]); // 3 spaces after bullet
-    } else if (hasBullet) {
-      lines.push('     ' + wrappedLines[i]); // 5 spaces for continuation (aligns with text)
     } else {
-      lines.push(wrappedLines[i]); // No indent for non-bullet text
+      lines.push(wrappedLines[i]); // continuation lines should be aligned by the caller
     }
   }
   

@@ -125,7 +125,7 @@ function renderBodyContentTemplate9(
             y -= bodyLineHeight;
           }
         } else {
-          const lineWithoutBullet = line.trim().replace(/^[·•]\s*/, '');
+          const lineWithoutBullet = line.trim().replace(/^[·•]\s*/, '').replace(/\*\*/g, '');
           const colonIndex = lineWithoutBullet.indexOf(':');
           // Check if we're in Technical Skills section
           const isTechnicalSkillsSection = currentSection === 'technical skills' || currentSection === 'skills';
@@ -144,12 +144,13 @@ function renderBodyContentTemplate9(
           
           const colonIndex = lineWithoutBullet.indexOf(':');
           if (colonIndex !== -1) {
-            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).trim();
+            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim();
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
             
             const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
             const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const wrappedSkills = wrapText(skillsText, font, bodySize, contentWidth - 20);
+            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
+            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
             
             let currentX = left + 15;
             
@@ -192,7 +193,7 @@ function renderBodyContentTemplate9(
                   y = PAGE_HEIGHT - 100;
                 }
                 context.page.drawText(wrappedSkills[i], {
-                  x: left + 15 + bulletWidth,
+                  x: left + 15 + bulletWidth + categoryWidth + spaceWidth,
                   y,
                   size: bodySize,
                   font,

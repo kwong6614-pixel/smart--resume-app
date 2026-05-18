@@ -235,7 +235,7 @@ function renderBodyContentTemplate2(
           // Distinguish skill categories from experience bullets
           // Skill categories have pattern: "• Category Name: skills list"
           // Experience bullets are full sentences without this pattern
-          const lineWithoutBullet = line.trim().replace(/^[·•]\s*/, '');
+          const lineWithoutBullet = line.trim().replace(/^[·•]\s*/, '').replace(/\*\*/g, '');
           const colonIndex = lineWithoutBullet.indexOf(':');
           // Check if we're in Technical Skills section
           const isTechnicalSkillsSection = currentSection === 'technical skills' || currentSection === 'skills';
@@ -257,13 +257,14 @@ function renderBodyContentTemplate2(
           // Extract category name (part before colon) and skills (part after colon)
           const colonIndex = lineWithoutBullet.indexOf(':');
           if (colonIndex !== -1) {
-            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).trim(); // Include the colon
+            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim(); // Include the colon
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
             
             // Calculate available width for skills (after category name and bullet)
             const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
             const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const wrappedSkills = wrapText(skillsText, font, bodySize, contentWidth - 20);
+            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
+            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
             
             // Draw bullet dot, category name in bold, and skills on same/next lines
             let currentX = left + 20;
@@ -339,7 +340,7 @@ function renderBodyContentTemplate2(
                   y = PAGE_HEIGHT - 72;
                 }
                 context.page.drawText(wrappedSkills[i], {
-                  x: left + 20 + bulletWidth,
+                  x: left + 20 + bulletWidth + categoryWidth + spaceWidth,
                   y,
                   size: bodySize,
                   font,
