@@ -587,8 +587,10 @@ export async function renderTemplate2(context: TemplateContext): Promise<Uint8Ar
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH * 0.6);
     for (const line of contactLines) {
+      const textWidth = font.widthOfTextAtSize(line, CONTACT_SIZE);
+      const actualX = right - textWidth;
       page.drawText(line, { 
-        x: left, 
+        x: actualX, 
         y, 
         size: CONTACT_SIZE, 
         font, 
