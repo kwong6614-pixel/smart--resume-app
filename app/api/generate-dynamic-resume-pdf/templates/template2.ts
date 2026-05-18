@@ -263,7 +263,7 @@ function renderBodyContentTemplate2(
             // Calculate available width for skills (after category name and bullet)
             const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
             const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - spaceWidth;
+            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
             const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
             
             // Draw bullet dot, category name in bold, and skills on same/next lines
@@ -309,7 +309,7 @@ function renderBodyContentTemplate2(
             
             // Draw skills text on same line or wrapped to next lines
             if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + spaceWidth;
+              const contentStartX = currentX + categoryWidth + spaceWidth;
               context.page.drawText(wrappedSkills[0], {
                 x: contentStartX,
                 y,

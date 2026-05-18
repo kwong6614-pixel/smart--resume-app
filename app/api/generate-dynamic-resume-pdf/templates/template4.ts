@@ -230,7 +230,7 @@ function renderBodyContentTemplate4(
             
             const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
             const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - spaceWidth;
+            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
             const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
             
             let currentX = left + 20;
@@ -273,7 +273,7 @@ function renderBodyContentTemplate4(
             });
             
             if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + spaceWidth;
+              const contentStartX = currentX + categoryWidth + spaceWidth;
               context.page.drawText(wrappedSkills[0], {
                 x: contentStartX,
                 y,
