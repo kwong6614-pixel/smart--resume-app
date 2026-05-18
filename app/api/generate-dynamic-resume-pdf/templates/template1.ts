@@ -181,77 +181,95 @@ function renderBodyContentTemplate1(
             const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim();
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
             
-            const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
-            const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
-            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
+            // Combine category name and skills text, wrap at full available width
+            const fullText = categoryName + ' ' + skillsText;
+            const bulletX = left + 15;
+            const contentX = bulletX + bulletWidth;
+            const availableWidth = right - contentX;
+            const wrappedLines = wrapText(fullText, font, bodySize, availableWidth);
             
-            let currentX = left + 15;
-            
-            if (y < marginBottom) {
-              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-              const accentBarHeight = 8;
-              context.page.drawRectangle({
-                x: 0,
-                y: PAGE_HEIGHT - accentBarHeight,
-                width: PAGE_WIDTH,
-                height: accentBarHeight,
-                color: DEEP_BLUE,
-              });
-              y = PAGE_HEIGHT - 80;
-            }
-            
-            context.page.drawText(bulletSymbol, {
-              x: currentX, 
-              y, 
-              size: bulletSize, 
-              font, 
-              color: BLACK 
-            });
-            
-            currentX += bulletWidth;
-            context.page.drawText(categoryName, {
-              x: currentX, 
-              y, 
-              size: bodySize, 
-              font: fontBold, 
-              color: BLACK 
-            });
-            
-            if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + categoryWidth + spaceWidth;
-              context.page.drawText(wrappedSkills[0], {
-                x: contentStartX,
-                y,
-                size: bodySize,
-                font,
-                color: BLACK
-              });
+            for (let lineIndex = 0; lineIndex < wrappedLines.length; lineIndex++) {
+              if (y < marginBottom) {
+                context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                const accentBarHeight = 8;
+                context.page.drawRectangle({
+                  x: 0,
+                  y: PAGE_HEIGHT - accentBarHeight,
+                  width: PAGE_WIDTH,
+                  height: accentBarHeight,
+                  color: DEEP_BLUE,
+                });
+                y = PAGE_HEIGHT - 80;
+              }
               
-              for (let i = 1; i < wrappedSkills.length; i++) {
-                y -= bodyLineHeight;
-                if (y < marginBottom) {
-                  context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                  const accentBarHeight = 8;
-                  context.page.drawRectangle({
-                    x: 0,
-                    y: PAGE_HEIGHT - accentBarHeight,
-                    width: PAGE_WIDTH,
-                    height: accentBarHeight,
-                    color: DEEP_BLUE,
+              const wrappedLine = wrappedLines[lineIndex];
+              
+              if (lineIndex === 0) {
+                // Draw bullet on first line only
+                context.page.drawText(bulletSymbol, {
+                  x: bulletX, 
+                  y, 
+                  size: bulletSize, 
+                  font, 
+                  color: BLACK 
+                });
+                
+                // Check if this line contains the colon (category name boundary)
+                const colonIndexInLine = wrappedLine.indexOf(':');
+                if (colonIndexInLine !== -1) {
+                  // Line contains colon: render category name part in bold, rest in regular
+                  const boldPart = wrappedLine.substring(0, colonIndexInLine + 1);
+                  const regularPart = wrappedLine.substring(colonIndexInLine + 1).trim();
+                  
+                  let offsetX = contentX;
+                  
+                  // Draw bold part (category name with colon)
+                  context.page.drawText(boldPart, {
+                    x: offsetX,
+                    y,
+                    size: bodySize,
+                    font: fontBold,
+                    color: BLACK
                   });
-                  y = PAGE_HEIGHT - 80;
+                  offsetX += fontBold.widthOfTextAtSize(boldPart, bodySize);
+                  
+                  // Draw regular part (skills text) with space after colon
+                  if (regularPart) {
+                    const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
+                    offsetX += spaceWidth;
+                    context.page.drawText(regularPart, {
+                      x: offsetX,
+                      y,
+                      size: bodySize,
+                      font,
+                      color: BLACK
+                    });
+                  }
+                } else {
+                  // No colon in this line: render entire line in regular font
+                  context.page.drawText(wrappedLine, {
+                    x: contentX,
+                    y,
+                    size: bodySize,
+                    font,
+                    color: BLACK
+                  });
                 }
-                context.page.drawText(wrappedSkills[i], {
-                  x: contentStartX,
+              } else {
+                // Continuation lines: render in regular font, aligned with content start
+                context.page.drawText(wrappedLine, {
+                  x: contentX,
                   y,
                   size: bodySize,
                   font,
                   color: BLACK
                 });
               }
+              
+              y -= bodyLineHeight;
             }
-            y -= bodyLineHeight + 4;
+            
+            y -= 4;
           }
           } else {
             // For experience bullets and other content, add bullets if needed

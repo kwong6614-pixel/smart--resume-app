@@ -192,86 +192,86 @@ function renderBodyContentTemplate8(
         
           if (isSkillsCategory) {
           const bulletSymbol = BULLET_CHAR;
-          const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bodySize);
+          const bulletSize = bodySize;
+          const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bulletSize);
           
           const colonIndex = lineWithoutBullet.indexOf(':');
           if (colonIndex !== -1) {
             const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim();
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
+            const fullText = categoryName + ' ' + skillsText;
+            const bulletX = left + 20;
+            const contentX = bulletX + bulletWidth;
+            const availableWidth = right - contentX;
+            const wrappedLines = wrapText(fullText, font, bodySize, availableWidth);
             
-            const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
-            const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
-            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
-            
-            let currentX = left + 20;
-            
-            if (y < marginBottom) {
-              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-              const frameMargin = 30;
-              context.page.drawRectangle({
-                x: frameMargin,
-                y: frameMargin,
-                width: PAGE_WIDTH - frameMargin * 2,
-                height: PAGE_HEIGHT - frameMargin * 2,
-                borderColor: DARK_GRAY,
-                borderWidth: 2,
-              });
-              y = PAGE_HEIGHT - 72;
-            }
-            
-            context.page.drawText(bulletSymbol, {
-              x: currentX, 
-              y, 
-              size: bodySize, 
-              font, 
-              color: BLACK 
-            });
-            
-            currentX += bulletWidth;
-            context.page.drawText(categoryName, {
-              x: currentX, 
-              y, 
-              size: bodySize, 
-              font: fontBold, 
-              color: BLACK 
-            });
-            
-            if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + categoryWidth + spaceWidth;
-              context.page.drawText(wrappedSkills[0], {
-                x: contentStartX,
-                y,
-                size: bodySize,
-                font,
-                color: BLACK
-              });
-              
-              for (let i = 1; i < wrappedSkills.length; i++) {
-                y -= bodyLineHeight;
-                if (y < marginBottom) {
-                  context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                  const frameMargin = 30;
-                  context.page.drawRectangle({
-                    x: frameMargin,
-                    y: frameMargin,
-                    width: PAGE_WIDTH - frameMargin * 2,
-                    height: PAGE_HEIGHT - frameMargin * 2,
-                    borderColor: DARK_GRAY,
-                    borderWidth: 2,
+            for (let lineIndex = 0; lineIndex < wrappedLines.length; lineIndex++) {
+              if (y < marginBottom) {
+                context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                const frameMargin = 30;
+                context.page.drawRectangle({
+                  x: frameMargin,
+                  y: frameMargin,
+                  width: PAGE_WIDTH - frameMargin * 2,
+                  height: PAGE_HEIGHT - frameMargin * 2,
+                  borderColor: DARK_GRAY,
+                  borderWidth: 2,
+                });
+                y = PAGE_HEIGHT - 72;
+              }
+              const wrappedLine = wrappedLines[lineIndex];
+              if (lineIndex === 0) {
+                context.page.drawText(bulletSymbol, {
+                  x: bulletX,
+                  y,
+                  size: bulletSize,
+                  font,
+                  color: BLACK
+                });
+                const colonIndexInLine = wrappedLine.indexOf(':');
+                if (colonIndexInLine !== -1) {
+                  const boldPart = wrappedLine.substring(0, colonIndexInLine + 1);
+                  const regularPart = wrappedLine.substring(colonIndexInLine + 1).trim();
+                  let offsetX = contentX;
+                  context.page.drawText(boldPart, {
+                    x: offsetX,
+                    y,
+                    size: bodySize,
+                    font: fontBold,
+                    color: BLACK
                   });
-                  y = PAGE_HEIGHT - 72;
+                  offsetX += fontBold.widthOfTextAtSize(boldPart, bodySize);
+                  if (regularPart) {
+                    offsetX += font.widthOfTextAtSize(' ', bodySize);
+                    context.page.drawText(regularPart, {
+                      x: offsetX,
+                      y,
+                      size: bodySize,
+                      font,
+                      color: BLACK
+                    });
+                  }
+                } else {
+                  context.page.drawText(wrappedLine, {
+                    x: contentX,
+                    y,
+                    size: bodySize,
+                    font,
+                    color: BLACK
+                  });
                 }
-                context.page.drawText(wrappedSkills[i], {
-                  x: contentStartX,
+              } else {
+                context.page.drawText(wrappedLine, {
+                  x: contentX,
                   y,
                   size: bodySize,
                   font,
                   color: BLACK
                 });
               }
+              y -= bodyLineHeight;
             }
-            y -= bodyLineHeight + 2;
+            y -= 2;
           }
           } else {
             // For experience bullets and other content, add bullets if needed

@@ -249,106 +249,110 @@ function renderBodyContentTemplate2(
                                   (isTechnicalSkillsSection && colonIndex !== -1 && colonIndex < 50);
         
           if (isSkillsCategory) {
-          // Keep the bullet/dot prefix
           const bulletSymbol = BULLET_CHAR;
           const bulletSize = bodySize * 1.2;
           const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bulletSize);
           
-          // Extract category name (part before colon) and skills (part after colon)
           const colonIndex = lineWithoutBullet.indexOf(':');
           if (colonIndex !== -1) {
-            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim(); // Include the colon
+            const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim();
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
             
-            // Calculate available width for skills (after category name and bullet)
-            const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
-            const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
-            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
+            // Combine category name and skills text, wrap at full available width
+            const fullText = categoryName + ' ' + skillsText;
+            const bulletX = left + 20;
+            const contentX = bulletX + bulletWidth;
+            const availableWidth = right - contentX;
+            const wrappedLines = wrapText(fullText, font, bodySize, availableWidth);
             
-            // Draw bullet dot, category name in bold, and skills on same/next lines
-            let currentX = left + 20;
-            
-            if (y < marginBottom) {
-              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-              context.page.drawRectangle({
-                x: 0,
-                y: PAGE_HEIGHT - 15,
-                width: PAGE_WIDTH,
-                height: 15,
-                color: BURGUNDY,
-              });
-              context.page.drawRectangle({
-                x: 0,
-                y: 0,
-                width: PAGE_WIDTH,
-                height: 15,
-                color: BURGUNDY,
-              });
-              y = PAGE_HEIGHT - 72;
-            }
-            
-            // Draw bullet dot (regular font, not bold)
-            context.page.drawText(bulletSymbol, {
-              x: currentX, 
-              y, 
-              size: bulletSize, 
-              font, 
-              color: BLACK 
-            });
-            
-            // Draw category name in bold (after bullet)
-            currentX += bulletWidth;
-            context.page.drawText(categoryName, {
-              x: currentX, 
-              y, 
-              size: bodySize, 
-              font: fontBold, 
-              color: BLACK 
-            });
-            
-            // Draw skills text on same line or wrapped to next lines
-            if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + categoryWidth + spaceWidth;
-              context.page.drawText(wrappedSkills[0], {
-                x: contentStartX,
-                y,
-                size: bodySize,
-                font,
-                color: BLACK
-              });
+            for (let lineIndex = 0; lineIndex < wrappedLines.length; lineIndex++) {
+              if (y < marginBottom) {
+                context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                context.page.drawRectangle({
+                  x: 0,
+                  y: PAGE_HEIGHT - 15,
+                  width: PAGE_WIDTH,
+                  height: 15,
+                  color: BURGUNDY,
+                });
+                context.page.drawRectangle({
+                  x: 0,
+                  y: 0,
+                  width: PAGE_WIDTH,
+                  height: 15,
+                  color: BURGUNDY,
+                });
+                y = PAGE_HEIGHT - 72;
+              }
               
-              // Draw remaining wrapped lines (indented to align with skills, after bullet)
-              for (let i = 1; i < wrappedSkills.length; i++) {
-                y -= bodyLineHeight;
-                if (y < marginBottom) {
-                  context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                  context.page.drawRectangle({
-                    x: 0,
-                    y: PAGE_HEIGHT - 15,
-                    width: PAGE_WIDTH,
-                    height: 15,
-                    color: BURGUNDY,
+              const wrappedLine = wrappedLines[lineIndex];
+              
+              if (lineIndex === 0) {
+                // Draw bullet on first line only
+                context.page.drawText(bulletSymbol, {
+                  x: bulletX, 
+                  y, 
+                  size: bulletSize, 
+                  font, 
+                  color: BLACK 
+                });
+                
+                // Check if this line contains the colon (category name boundary)
+                const colonIndexInLine = wrappedLine.indexOf(':');
+                if (colonIndexInLine !== -1) {
+                  // Line contains colon: render category name part in bold, rest in regular
+                  const boldPart = wrappedLine.substring(0, colonIndexInLine + 1);
+                  const regularPart = wrappedLine.substring(colonIndexInLine + 1).trim();
+                  
+                  let offsetX = contentX;
+                  
+                  // Draw bold part (category name with colon)
+                  context.page.drawText(boldPart, {
+                    x: offsetX,
+                    y,
+                    size: bodySize,
+                    font: fontBold,
+                    color: BLACK
                   });
-                  context.page.drawRectangle({
-                    x: 0,
-                    y: 0,
-                    width: PAGE_WIDTH,
-                    height: 15,
-                    color: BURGUNDY,
+                  offsetX += fontBold.widthOfTextAtSize(boldPart, bodySize);
+                  
+                  // Draw regular part (skills text) with space after colon
+                  if (regularPart) {
+                    const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
+                    offsetX += spaceWidth;
+                    context.page.drawText(regularPart, {
+                      x: offsetX,
+                      y,
+                      size: bodySize,
+                      font,
+                      color: BLACK
+                    });
+                  }
+                } else {
+                  // No colon in this line: render entire line in regular font
+                  context.page.drawText(wrappedLine, {
+                    x: contentX,
+                    y,
+                    size: bodySize,
+                    font,
+                    color: BLACK
                   });
-                  y = PAGE_HEIGHT - 72;
                 }
-                context.page.drawText(wrappedSkills[i], {
-                  x: contentStartX,
+              } else {
+                // Continuation lines: render in regular font, aligned with content start
+                context.page.drawText(wrappedLine, {
+                  x: contentX,
                   y,
                   size: bodySize,
                   font,
                   color: BLACK
                 });
               }
+              
+              y -= bodyLineHeight;
             }
-            y -= bodyLineHeight + 2;
+            
+            y -= 2;
           } else {
             // Fallback: if no colon, keep the dot and display category name
             const categoryName = lineWithoutBullet;

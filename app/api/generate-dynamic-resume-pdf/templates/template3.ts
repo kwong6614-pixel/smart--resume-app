@@ -176,83 +176,84 @@ function renderBodyContentTemplate3(
                                   (isTechnicalSkillsSection && colonIndex !== -1 && colonIndex < 50);
           
           if (isSkillsCategory && colonIndex !== -1) {
-            // Split category name and skills text, render category name in bold
             const bulletSymbol = BULLET_CHAR;
             const bulletSize = bodySize * 1.2;
             const bulletWidth = font.widthOfTextAtSize(bulletSymbol + '   ', bulletSize);
             
             const categoryName = lineWithoutBullet.substring(0, colonIndex + 1).replace(/\*\*/g, '').trim();
             const skillsText = lineWithoutBullet.substring(colonIndex + 1).trim();
+            const fullText = categoryName + ' ' + skillsText;
+            const bulletX = left + 30;
+            const contentX = bulletX + bulletWidth;
+            const availableWidth = right - contentX;
+            const wrappedLines = wrapText(fullText, font, bodySize, availableWidth);
             
-            const categoryWidth = fontBold.widthOfTextAtSize(categoryName, bodySize);
-            const spaceWidth = font.widthOfTextAtSize(' ', bodySize);
-            const skillTextMaxWidth = contentWidth - 20 - bulletWidth - categoryWidth - spaceWidth;
-            const wrappedSkills = wrapText(skillsText, font, bodySize, skillTextMaxWidth > 0 ? skillTextMaxWidth : contentWidth - 20);
-            
-            let currentX = left + 30;
-            
-            if (y < marginBottom) {
-              context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-              context.page.drawRectangle({
-                x: 0,
-                y: 0,
-                width: 12,
-                height: PAGE_HEIGHT,
-                color: INDIGO,
-              });
-              y = PAGE_HEIGHT - 72;
-            }
-            
-            context.page.drawText(bulletSymbol, {
-              x: currentX, 
-              y, 
-              size: bulletSize, 
-              font, 
-              color: BLACK 
-            });
-            
-            currentX += bulletWidth;
-            context.page.drawText(categoryName, {
-              x: currentX, 
-              y, 
-              size: bodySize, 
-              font: fontBold, 
-              color: BLACK 
-            });
-            
-            if (wrappedSkills.length > 0 && wrappedSkills[0]) {
-              const contentStartX = currentX + categoryWidth + spaceWidth;
-              context.page.drawText(wrappedSkills[0], {
-                x: contentStartX,
-                y,
-                size: bodySize,
-                font,
-                color: BLACK
-              });
+            for (let lineIndex = 0; lineIndex < wrappedLines.length; lineIndex++) {
+              if (y < marginBottom) {
+                context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+                context.page.drawRectangle({
+                  x: 0,
+                  y: 0,
+                  width: 12,
+                  height: PAGE_HEIGHT,
+                  color: INDIGO,
+                });
+                y = PAGE_HEIGHT - 72;
+              }
               
-              for (let i = 1; i < wrappedSkills.length; i++) {
-                y -= bodyLineHeight;
-                if (y < marginBottom) {
-                  context.page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-                  context.page.drawRectangle({
-                    x: 0,
-                    y: 0,
-                    width: 12,
-                    height: PAGE_HEIGHT,
-                    color: INDIGO,
+              const wrappedLine = wrappedLines[lineIndex];
+              if (lineIndex === 0) {
+                context.page.drawText(bulletSymbol, {
+                  x: bulletX,
+                  y,
+                  size: bulletSize,
+                  font,
+                  color: BLACK
+                });
+                const colonIndexInLine = wrappedLine.indexOf(':');
+                if (colonIndexInLine !== -1) {
+                  const boldPart = wrappedLine.substring(0, colonIndexInLine + 1);
+                  const regularPart = wrappedLine.substring(colonIndexInLine + 1).trim();
+                  let offsetX = contentX;
+                  context.page.drawText(boldPart, {
+                    x: offsetX,
+                    y,
+                    size: bodySize,
+                    font: fontBold,
+                    color: BLACK
                   });
-                  y = PAGE_HEIGHT - 72;
+                  offsetX += fontBold.widthOfTextAtSize(boldPart, bodySize);
+                  if (regularPart) {
+                    offsetX += font.widthOfTextAtSize(' ', bodySize);
+                    context.page.drawText(regularPart, {
+                      x: offsetX,
+                      y,
+                      size: bodySize,
+                      font,
+                      color: BLACK
+                    });
+                  }
+                } else {
+                  context.page.drawText(wrappedLine, {
+                    x: contentX,
+                    y,
+                    size: bodySize,
+                    font,
+                    color: BLACK
+                  });
                 }
-                context.page.drawText(wrappedSkills[i], {
-                  x: contentStartX,
+              } else {
+                context.page.drawText(wrappedLine, {
+                  x: contentX,
                   y,
                   size: bodySize,
                   font,
                   color: BLACK
                 });
               }
+              y -= bodyLineHeight;
             }
-            y -= bodyLineHeight + 2;
+            y -= 2;
           } else {
             // For experience bullets and other content, add bullets if needed
             const hasBullet = /^[\-\·•]\s/.test(line);
