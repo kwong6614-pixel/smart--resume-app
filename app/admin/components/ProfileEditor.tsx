@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { BaseResumeProfile } from '@/app/data/baseResumes';
 import { DEFAULT_PROMPT_TEMPLATE } from '@/app/utils/promptBuilder';
-import TemplateSelectorGrid from './TemplateSelectorGrid';
 import TemplatePreviewModal from './TemplatePreviewModal';
 import { PDF_TEMPLATES } from './templateMetadata';
 
@@ -275,13 +274,36 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
           {/* PDF Template Selection */}
           <div className="border-b border-gray-200 pb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-6">PDF Template Style</h3>
-            <TemplateSelectorGrid
-              selectedTemplate={editingProfile.pdfTemplate || 1}
-              onSelect={(templateId) =>
-                setEditingProfile({ ...editingProfile, pdfTemplate: templateId })
-              }
-              onPreview={(templateId) => setPreviewTemplateId(templateId)}
-            />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Template
+                </label>
+                <select
+                  value={editingProfile.pdfTemplate || 1}
+                  onChange={(e) =>
+                    setEditingProfile({
+                      ...editingProfile,
+                      pdfTemplate: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {PDF_TEMPLATES.map((template) => (
+                    <option key={template.value} value={template.value}>
+                      {template.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewTemplateId(editingProfile.pdfTemplate || 1)}
+                className="inline-flex items-center justify-center whitespace-nowrap px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Preview
+              </button>
+            </div>
           </div>
 
           {/* Custom Prompt Editor */}
