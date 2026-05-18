@@ -13,7 +13,7 @@ export interface TemplateMetadata {
 export const PDF_TEMPLATES: TemplateMetadata[] = [
   {
     value: 1,
-    label: 'Bold Header',
+    label: 'Template 1',
     description: 'Strong typography with horizontal separator',
     category: 'classic',
     features: ['Bold name', 'Horizontal rule', 'Clean layout'],
@@ -23,7 +23,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 2,
-    label: 'Accent Bar',
+    label: 'Template 2',
     description: 'Navy left accent bar with section underlines',
     category: 'modern',
     features: ['Left accent bar', 'Section dividers', 'Navy accent'],
@@ -33,7 +33,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 3,
-    label: 'Minimalist',
+    label: 'Template 3',
     description: 'Clean and elegant with subtle gray separators',
     category: 'minimal',
     features: ['Generous spacing', 'Subtle lines', 'Elegant typography'],
@@ -43,7 +43,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 4,
-    label: 'Classic Centered',
+    label: 'Template 4',
     description: 'Centered header with elegant spacing',
     category: 'classic',
     features: ['Centered layout', 'Underlined headers', 'Balanced spacing'],
@@ -53,7 +53,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 5,
-    label: 'Modern Block',
+    label: 'Template 5',
     description: 'Large name with clean section dividers',
     category: 'modern',
     features: ['Large typography', 'Accent dividers', 'Modern feel'],
@@ -63,7 +63,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 6,
-    label: 'Executive Minimal',
+    label: 'Template 6',
     description: 'Luxurious whitespace with thin separators',
     category: 'professional',
     features: ['Large margins', 'Thin lines', 'Elegant spacing'],
@@ -73,7 +73,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 7,
-    label: 'Modern Software Engineer',
+    label: 'Template 7',
     description: 'Optimized for tech with subtle background accents',
     category: 'modern',
     features: ['Background sections', 'Tech-optimized', 'Strong readability'],
@@ -83,7 +83,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 8,
-    label: 'Premium Timeline',
+    label: 'Template 8',
     description: 'Vertical timeline flow with blue accent dots',
     category: 'professional',
     features: ['Timeline dots', 'Career flow', 'Visual progression'],
@@ -93,7 +93,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 9,
-    label: 'Staff Engineer Pro',
+    label: 'Template 9',
     description: 'Enterprise aesthetic with premium section headers',
     category: 'professional',
     features: ['Accent bars', 'Premium styling', 'Leadership focused'],
@@ -103,7 +103,7 @@ export const PDF_TEMPLATES: TemplateMetadata[] = [
   },
   {
     value: 10,
-    label: 'Ultra Clean ATS+',
+    label: 'Template 10',
     description: 'Minimal decoration, optimized for ATS parsing',
     category: 'minimal',
     features: ['No decorations', 'ATS-friendly', 'Maximum readability'],

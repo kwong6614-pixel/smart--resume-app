@@ -427,7 +427,7 @@ export default function ProfileEditor({ profiles, onUpdate }: ProfileEditorProps
                       PDF Template:{' '}
                       <span className="font-semibold">
                         {PDF_TEMPLATES.find(t => t.value === (profile.pdfTemplate || 1))?.label ||
-                          'Template1'}
+                          'Template 1'}
                       </span>
                     </p>
                   </div>
