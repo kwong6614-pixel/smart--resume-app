@@ -370,13 +370,25 @@ export function addLinkAnnotation(
   url: string
 ) {
   try {
-    // Create the annotation dictionary
+    // Create the URI action as an indirect object (some viewers require indirect actions)
+    const uriAction = pdfDoc.context.register(
+      pdfDoc.context.obj({
+        Type: PDFName.of('Action'),
+        S: PDFName.of('URI'),
+        URI: url,
+        // Preferred flag per PDF spec
+        NewWindow: true,
+        // Some viewers look for alternative keys; include both for compatibility
+        OpenInNewWindow: true,
+      })
+    );
+
     const linkDict = pdfDoc.context.obj({
-      Type: 'Annot',
-      Subtype: 'Link',
+      Type: PDFName.of('Annot'),
+      Subtype: PDFName.of('Link'),
       Rect: [x, y, x + width, y + height],
       Border: [0, 0, 0],
-      A: pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: url, NewWindow: true }),
+      A: uriAction,
     });
 
     const linkRef = pdfDoc.context.register(linkDict);
@@ -384,12 +396,10 @@ export function addLinkAnnotation(
     const annotsKey = PDFName.of('Annots');
     const existingAnnots = page.node.get(annotsKey);
     if (existingAnnots) {
-      // Append to existing Annots array
       const arr: any = existingAnnots as any;
       arr.push(linkRef);
       page.node.set(annotsKey, arr);
     } else {
-      // Create new Annots array
       page.node.set(annotsKey, pdfDoc.context.obj([linkRef]));
     }
   } catch (e) {
