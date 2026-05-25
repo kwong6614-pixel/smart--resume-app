@@ -336,7 +336,7 @@ export async function renderTemplate5(context: TemplateContext): Promise<Uint8Ar
   if (context.linkedin) contactParts.push('LinkedIn');
   if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
-    const contactLine = contactParts.join('  |  ');
+    const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH * 0.7);
     const contactLinks = [
       { label: 'LinkedIn', url: context.linkedin },
