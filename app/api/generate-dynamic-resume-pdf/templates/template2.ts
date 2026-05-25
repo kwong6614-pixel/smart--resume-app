@@ -584,11 +584,16 @@ export async function renderTemplate2(context: TemplateContext): Promise<Uint8Ar
   // Contact info positioned on the left side (asymmetric)
   const contactParts = [location, email, phone].filter(Boolean);
   if (context.linkedin) contactParts.push('LinkedIn');
+  if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH * 0.6);
+    const contactLinks = [
+      { label: 'LinkedIn', url: context.linkedin },
+      { label: 'GitHub', url: context.github },
+    ].filter(link => link.url);
     for (const line of contactLines) {
-      drawRightTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, right, y);
+      drawRightTextWithOptionalLink(page, pdfDoc, line, contactLinks, font, CONTACT_SIZE, MEDIUM_GRAY, right, y);
       y -= CONTACT_SIZE * 1.3;
     }
     y -= 10;

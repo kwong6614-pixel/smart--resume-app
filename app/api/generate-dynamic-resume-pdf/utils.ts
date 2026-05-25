@@ -1,4 +1,4 @@
-import { PDFDocument, PDFFont, PDFPage, RGB, rgb, PDFName } from 'pdf-lib';
+﻿import { PDFDocument, PDFFont, PDFPage, RGB, rgb, PDFName } from 'pdf-lib';
 
 // Shared interface for template rendering
 export interface TemplateContext {
@@ -12,9 +12,15 @@ export interface TemplateContext {
   phone: string;
   location: string;
   linkedin?: string;
+  github?: string;
   body: string;
   PAGE_WIDTH: number;
   PAGE_HEIGHT: number;
+}
+
+export interface ContactLink {
+  label: string;
+  url?: string;
 }
 
 // Helper to normalize bold markers - fix newlines and extra whitespace inside **...**
@@ -64,6 +70,9 @@ function looksLikePhone(line: string): boolean {
 function looksLikeLinkedIn(line: string): boolean {
   return /linkedin\.com/i.test(line);
 }
+function looksLikeGitHub(line: string): boolean {
+  return /github\.com/i.test(line);
+}
 
 /** Experience lines in this app look like "Role at Company: dates" */
 function looksLikeJobLine(line: string): boolean {
@@ -90,6 +99,7 @@ export function parseResume(resumeText: string): {
   phone: string;
   location: string;
   linkedin: string;
+  github: string;
   body: string;
 } {
   const normalizedText = normalizeBoldMarkers(resumeText);
@@ -115,7 +125,7 @@ export function parseResume(resumeText: string): {
     while (j < lines.length && !lines[j].trim()) j++;
     if (j < lines.length) {
       const next = lines[j].trim();
-      if (looksLikeEmail(next) || looksLikePhone(next) || looksLikeLinkedIn(next)) {
+      if (looksLikeEmail(next) || looksLikePhone(next) || looksLikeLinkedIn(next) || looksLikeGitHub(next)) {
         continue;
       }
       if (info.length < 6 && !looksLikeBodyStart(next)) {
@@ -133,19 +143,21 @@ export function parseResume(resumeText: string): {
   let email = '';
   let phone = '';
   let linkedin = '';
+  let github = '';
   const locationParts: string[] = [];
 
   for (const line of contactLines) {
     if (looksLikeEmail(line)) email = line;
     else if (looksLikePhone(line)) phone = line;
     else if (looksLikeLinkedIn(line)) linkedin = line;
+    else if (looksLikeGitHub(line)) github = line;
     else locationParts.push(line);
   }
   const location = locationParts.join('  |  ').trim();
 
   while (bodyStart < lines.length && !lines[bodyStart].trim()) bodyStart++;
   const body = lines.slice(bodyStart).join('\n');
-  return { headline, name, email, phone, location, linkedin, body };
+  return { headline, name, email, phone, location, linkedin, github, body };
 }
 
 // Helper to convert date format from MM/YYYY to MMM YYYY
@@ -414,8 +426,7 @@ export function drawCenteredTextWithOptionalLink(
   page: PDFPage,
   pdfDoc: PDFDocument,
   text: string,
-  linkLabel: string | undefined,
-  linkUrl: string | undefined,
+  links: ContactLink[] = [],
   font: PDFFont,
   size: number,
   color: RGB,
@@ -428,14 +439,15 @@ export function drawCenteredTextWithOptionalLink(
   // Draw the full line
   page.drawText(text, { x, y, size, font, color });
 
-  // If a link is requested and the line contains the label, create an annotation
-  if (linkUrl && linkLabel && text.includes(linkLabel)) {
-    const before = text.split(linkLabel)[0];
-    const beforeWidth = font.widthOfTextAtSize(before, size);
-    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
+  if (!links?.length) return;
 
-    const paddingY = 2;
-    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+  const paddingY = 2;
+  for (const link of links) {
+    if (!link.url || !text.includes(link.label)) continue;
+    const before = text.split(link.label)[0];
+    const beforeWidth = font.widthOfTextAtSize(before, size);
+    const labelWidth = font.widthOfTextAtSize(link.label, size);
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, link.url);
   }
 }
 
@@ -444,8 +456,7 @@ export function drawRightTextWithOptionalLink(
   page: PDFPage,
   pdfDoc: PDFDocument,
   text: string,
-  linkLabel: string | undefined,
-  linkUrl: string | undefined,
+  links: ContactLink[] = [],
   font: PDFFont,
   size: number,
   color: RGB,
@@ -457,12 +468,15 @@ export function drawRightTextWithOptionalLink(
 
   page.drawText(text, { x, y, size, font, color });
 
-  if (linkUrl && linkLabel && text.includes(linkLabel)) {
-    const before = text.split(linkLabel)[0];
+  if (!links?.length) return;
+
+  const paddingY = 2;
+  for (const link of links) {
+    if (!link.url || !text.includes(link.label)) continue;
+    const before = text.split(link.label)[0];
     const beforeWidth = font.widthOfTextAtSize(before, size);
-    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
-    const paddingY = 2;
-    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+    const labelWidth = font.widthOfTextAtSize(link.label, size);
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, link.url);
   }
 }
 
@@ -471,8 +485,7 @@ export function drawLeftTextWithOptionalLink(
   page: PDFPage,
   pdfDoc: PDFDocument,
   text: string,
-  linkLabel: string | undefined,
-  linkUrl: string | undefined,
+  links: ContactLink[] = [],
   font: PDFFont,
   size: number,
   color: RGB,
@@ -482,11 +495,14 @@ export function drawLeftTextWithOptionalLink(
   const x = leftEdge;
   page.drawText(text, { x, y, size, font, color });
 
-  if (linkUrl && linkLabel && text.includes(linkLabel)) {
-    const before = text.split(linkLabel)[0];
+  if (!links?.length) return;
+
+  const paddingY = 2;
+  for (const link of links) {
+    if (!link.url || !text.includes(link.label)) continue;
+    const before = text.split(link.label)[0];
     const beforeWidth = font.widthOfTextAtSize(before, size);
-    const labelWidth = font.widthOfTextAtSize(linkLabel, size);
-    const paddingY = 2;
-    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, linkUrl);
+    const labelWidth = font.widthOfTextAtSize(link.label, size);
+    addLinkAnnotation(page, pdfDoc, x + beforeWidth, y - paddingY, labelWidth, size + paddingY * 2, link.url);
   }
 }

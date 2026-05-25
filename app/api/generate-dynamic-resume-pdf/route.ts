@@ -59,6 +59,7 @@ async function generateResumePdf(resumeText: string, template: number = 1): Prom
     phone: parsed.phone,
     location: parsed.location,
     linkedin: parsed.linkedin ?? '',
+    github: parsed.github ?? '',
     body: parsed.body,
     PAGE_WIDTH: 595,
     PAGE_HEIGHT: 842

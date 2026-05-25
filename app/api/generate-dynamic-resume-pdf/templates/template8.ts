@@ -426,11 +426,16 @@ export async function renderTemplate8(context: TemplateContext): Promise<Uint8Ar
   // Contact info (centered, classic)
   const contactParts = [location, email, phone].filter(Boolean);
   if (context.linkedin) contactParts.push('LinkedIn');
+  if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
+    const contactLinks = [
+      { label: 'LinkedIn', url: context.linkedin },
+      { label: 'GitHub', url: context.github },
+    ].filter(link => link.url);
     for (const line of contactLines) {
-      drawCenteredTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, y);
+      drawCenteredTextWithOptionalLink(page, pdfDoc, line, contactLinks, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, y);
       y -= CONTACT_SIZE * 1.3;
     }
     y -= 13;

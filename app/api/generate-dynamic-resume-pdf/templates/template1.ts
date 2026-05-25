@@ -352,7 +352,7 @@ function renderBodyContentTemplate1(
 
 // ELEGANT TOP ACCENT BAR TEMPLATE - Attractive design with subtle top accent bar and prominent header
 export async function renderTemplate1(context: TemplateContext): Promise<Uint8Array> {
-  const { pdfDoc, page, font, fontBold, headline, name, email, phone, location, linkedin, PAGE_WIDTH, PAGE_HEIGHT } = context;
+  const { pdfDoc, page, font, fontBold, headline, name, email, phone, location, linkedin, github, PAGE_WIDTH, PAGE_HEIGHT } = context;
   const BLACK = COLORS.BLACK;
   const MEDIUM_GRAY = COLORS.MEDIUM_GRAY;
   const DEEP_BLUE = rgb(0.2, 0.35, 0.55);
@@ -433,12 +433,17 @@ export async function renderTemplate1(context: TemplateContext): Promise<Uint8Ar
   // Contact info (centered in header, below name)
   const contactParts = [location, email, phone].filter(Boolean);
   if (linkedin) contactParts.push('LinkedIn');
+  if (github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  •  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
+    const contactLinks = [
+      { label: 'LinkedIn', url: linkedin },
+      { label: 'GitHub', url: github },
+    ].filter(link => link.url);
     let contactY = PAGE_HEIGHT - 90;
     for (const line of contactLines) {
-      drawCenteredTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, contactY);
+      drawCenteredTextWithOptionalLink(page, pdfDoc, line, contactLinks, font, CONTACT_SIZE, MEDIUM_GRAY, PAGE_WIDTH, contactY);
       contactY -= CONTACT_SIZE * 1.4;
     }
   }

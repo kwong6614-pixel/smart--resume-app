@@ -351,12 +351,17 @@ export async function renderTemplate6(context: TemplateContext): Promise<Uint8Ar
   // Contact info in header (white text)
   const contactParts = [location, email, phone].filter(Boolean);
   if (context.linkedin) contactParts.push('LinkedIn');
+  if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  |  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
+    const contactLinks = [
+      { label: 'LinkedIn', url: context.linkedin },
+      { label: 'GitHub', url: context.github },
+    ].filter(link => link.url);
     let contactY = PAGE_HEIGHT - HEADER_HEIGHT + 25;
     for (const line of contactLines) {
-      drawCenteredTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, rgb(0.95, 0.95, 0.95), PAGE_WIDTH, contactY);
+      drawCenteredTextWithOptionalLink(page, pdfDoc, line, contactLinks, font, CONTACT_SIZE, rgb(0.95, 0.95, 0.95), PAGE_WIDTH, contactY);
       contactY -= CONTACT_SIZE * 1.3;
     }
   }

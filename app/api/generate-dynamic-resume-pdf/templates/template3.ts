@@ -410,12 +410,17 @@ export async function renderTemplate3(context: TemplateContext): Promise<Uint8Ar
   // Contact info in header (below name)
   const contactParts = [location, email, phone].filter(Boolean);
   if (context.linkedin) contactParts.push('LinkedIn');
+  if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
     const contactLine = contactParts.join('  |  ');
     const contactLines = wrapText(contactLine, font, CONTACT_SIZE, CONTENT_WIDTH);
+    const contactLinks = [
+      { label: 'LinkedIn', url: context.linkedin },
+      { label: 'GitHub', url: context.github },
+    ].filter(link => link.url);
     let contactY = PAGE_HEIGHT - 80;
     for (const line of contactLines) {
-      drawLeftTextWithOptionalLink(page, pdfDoc, line, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, MEDIUM_GRAY, left, contactY);
+      drawLeftTextWithOptionalLink(page, pdfDoc, line, contactLinks, font, CONTACT_SIZE, MEDIUM_GRAY, left, contactY);
       contactY -= CONTACT_SIZE * 1.3;
     }
   }

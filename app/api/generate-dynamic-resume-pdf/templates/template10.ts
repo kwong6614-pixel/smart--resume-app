@@ -348,12 +348,17 @@ export async function renderTemplate10(context: TemplateContext): Promise<Uint8A
   }
   
   // Contact info in header bar (light gray text, right-aligned, vertically stacked)
-  const contactParts = [location, phone, email].filter(Boolean);
+  const contactParts = [location, email, phone].filter(Boolean);
   if (context.linkedin) contactParts.push('LinkedIn');
+  if (context.github) contactParts.push('GitHub');
   if (contactParts.length > 0) {
+    const contactLinks = [
+      { label: 'LinkedIn', url: context.linkedin },
+      { label: 'GitHub', url: context.github },
+    ].filter(link => link.url);
     let contactY = PAGE_HEIGHT - 40;
     for (const contactPart of contactParts) {
-      drawRightTextWithOptionalLink(page, pdfDoc, contactPart, 'LinkedIn', context.linkedin, font, CONTACT_SIZE, rgb(0.92, 0.92, 0.92), right, contactY);
+      drawRightTextWithOptionalLink(page, pdfDoc, contactPart, contactLinks, font, CONTACT_SIZE, rgb(0.92, 0.92, 0.92), right, contactY);
       contactY -= CONTACT_SIZE * 1.6; // Stack vertically with spacing
     }
   }
