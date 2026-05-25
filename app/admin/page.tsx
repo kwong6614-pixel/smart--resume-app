@@ -6,6 +6,7 @@ import AdminDashboard from './components/AdminDashboard';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
   const router = useRouter();
 
   useEffect(() => {
