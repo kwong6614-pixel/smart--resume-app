@@ -158,6 +158,11 @@ export async function POST(req: NextRequest) {
         return sanitized;
       }
 
+      value = value.trim();
+      if (value.length === 0) {
+        return sanitized;
+      }
+
       for (const char of value) {
         if (/[a-zA-Z0-9]/.test(char)) {
           sanitized += char;
