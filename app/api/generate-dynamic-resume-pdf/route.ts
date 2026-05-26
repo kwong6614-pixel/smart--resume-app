@@ -163,8 +163,26 @@ export async function POST(req: NextRequest) {
         return sanitized;
       }
 
-      for (const char of value) {
-        if (/[a-zA-Z0-9]/.test(char)) {
+      const shouldPreserveTokenChar = (text: string, index: number) => {
+        const char = text[index];
+        if (char === '#') {
+          return index > 0 && (text[index - 1] === 'C' || text[index - 1] === 'F');
+        }
+        if (char === '+') {
+          if (index > 0 && text[index - 1] === 'C' && text[index + 1] === '+') {
+            return true;
+          }
+          if (index > 1 && text[index - 1] === '+' && text[index - 2] === 'C') {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      for (let index = 0; index < value.length; index += 1) {
+        const char = value[index];
+
+        if (/[a-zA-Z0-9]/.test(char) || shouldPreserveTokenChar(value, index)) {
           sanitized += char;
           lastWasUnderscore = false;
         } else if (char === ' ') {
