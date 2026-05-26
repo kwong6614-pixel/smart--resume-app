@@ -150,8 +150,31 @@ export async function POST(req: NextRequest) {
     // 4. Generate PDF with template
     const pdfBytes = await generateResumePdf(tailoredResume, pdfTemplate);
 
+    const sanitizeFilePart = (value: string | null | undefined) => {
+      let sanitized = '';
+      let lastWasUnderscore = false;
+
+      if (!value) {
+        return sanitized;
+      }
+
+      for (const char of value) {
+        if (/[a-zA-Z0-9]/.test(char)) {
+          sanitized += char;
+          lastWasUnderscore = false;
+        } else if (char === ' ') {
+          if (!lastWasUnderscore && sanitized.length > 0) {
+            sanitized += '_';
+            lastWasUnderscore = true;
+          }
+        }
+      }
+
+      return sanitized.replace(/_+$/, '');
+    };
+
     // 5. Return PDF as response
-    const fileBase = `${(baseResumeProfile && baseResumeProfile.replace(/[^a-zA-Z0-9_]/g, '_'))}_${company.replace(/[^a-zA-Z0-9_]/g, '_')}_${role.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+    const fileBase = `${sanitizeFilePart(baseResumeProfile)}_${sanitizeFilePart(company)}_${sanitizeFilePart(role)}`;
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
